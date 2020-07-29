@@ -5,12 +5,17 @@ import { RectButton, ScrollView, TextInput } from 'react-native-gesture-handler'
 
 import backBtn from '../assets/images/backBtn.png';
 import logo from '../assets/images/logo.png';
+import App from '../App';
 
 export default function TopBar(props) {
 
+    const setPagef = (id) => {
+        App.changePage(id);
+    }
+
     return (
         <View style={styles.container}>
-            <TouchableOpacity style={styles.pictureBtn} onPress={() => props.leftOnPress} >
+            <TouchableOpacity style={styles.pictureBtn} onPress={() => setPagef(props.leftOnPress)} >
                 <Image source={props.leftIcon} style={{width:40, height:40}}/>
             </TouchableOpacity>
 
@@ -18,7 +23,7 @@ export default function TopBar(props) {
                 <Image source={props.middleIcon} style={{width:40, height:40}}/>
             </View>
 
-            <TouchableOpacity style={styles.pictureBtn} onPress={() => props.rightOnPress} > 
+            <TouchableOpacity style={styles.pictureBtn} onPress={() => setPagef(props.rightOnPress)} > 
                 <Image source={props.rightIcon} style={{width:40, height:40}}/>
             </TouchableOpacity>
         </View>

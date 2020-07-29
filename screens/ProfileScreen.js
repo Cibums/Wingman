@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
-import * as React from 'react';
+import React, {useState} from 'react';
 import { StyleSheet, Text, View, Image, Button } from 'react-native';
 import { RectButton, ScrollView, FlatList, TextInput, Switch, TouchableOpacity } from 'react-native-gesture-handler';
 import TopBar from '../components/TopBar';
@@ -11,10 +11,12 @@ import backPicture from '../assets/images/backBtn.png';
 import logo from '../assets/images/logo.png';
 import Break from '../components/Break';
 
-export default function ProfileScreen() {
+import * as firebase from 'firebase';
+import 'firebase/firestore';
+import RegisterScreen from './RegisterScreen';
+import Loading from './Loading';
 
-const name = "Chris";
-const DATA = 
+const pictures = 
 [
   {
       id: 'bd7acbea-c1b1-46c2-aed5-3ad53abb28ba',
@@ -30,40 +32,147 @@ const DATA =
   },
 ];
 
-return (
+var pics = [];
+
+export default function ProfileScreen(props) {
+
+  function setImage(i){
+
+    console.log("Setting Image...");
+
+    if(pics.length === 0){
+        pics = ([{
+            id: i,
+            uri: i
+        }]);
+    }
+    else{
+        pics.push({
+            id: i,
+            uri: i
+        });
+    }
+
+    setPictures(pics);
+  }
+
+  const [pictures, setPictures] = useState([]);
+
+  function getPictures(index = 0){
+    
+    firebase.storage().ref(props.id + "/image" + index + ".jpeg").getDownloadURL().then(function(url) {
+        console.log("Got Image: " + url);
+        setImage(url, true);
+        getPictures(index + 1);
+        return;
+      }).catch(function(error) {
+        switch(error.code){
+            case 'storage/object-not-found':
+                return;
+        }
+    });
+  }
+
+  const [userInfo, setUserInfo] = useState({
+    username: "",
+    bio: ""
+  });
+
+  const [picturesLoaded, loadPictures] = useState(false);
+  const [loaded, setLoadedState] = useState(false);
+
+  if(loaded == false){
+    GetProfile();
+
+    return(
+      <Loading />
+    )
+  }
+
+  if(picturesLoaded == false){
+
+    setPictures([]);
+    pics = [];
+
+    getPictures();
+    loadPictures();
+  }
+
+  return (
     <ScrollView style={styles.container}>
         <TopBar 
             leftIcon={backPicture}
             rightIcon={logo}
+            rightOnPress={2}
+            leftOnPress={3}
         />
-        <FlatList 
-          horizontal={true}
-          data={DATA}
-          renderItem={({item}) => 
-          <View style={styles.picture}>
-            <Image 
-              style={styles.picture} 
-              source={{uri: item.uri}}
-            />
-          </View>
-          }
-          keyExtractor={item => item.id}
-        />
-        <View style={styles.pictureIndicator}></View>
+        <View>
+          <FlatList 
+            horizontal={true}
+            data={pictures}
+            renderItem={({item}) => 
+            <View style={styles.picture}>
+              <Image 
+                style={styles.picture} 
+                source={{uri: item.uri}}
+              />
+            </View>
+            }
+            keyExtractor={item => item.id}
+          />
+          <TouchableOpacity style={{position: 'absolute', }}><Image style={{height: 100, width: 100}} source={{uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcQRty_XLYXUcbWOTaePNV7fahK66FiR41r-kQ&usqp=CAU"}} /></TouchableOpacity>
+        </View>        
         <View style={styles.infoBar}>
-        <Text>{name}</Text>
-          <View style={{width:20, height:20}}></View>
+          <Text>{userInfo.username}</Text>
+          <View style={{flexDirection: 'row'}}>
+            <Image style={{width: 20, height: 20}} source={{uri: "https://icon-library.com/images/position-icon/position-icon-8.jpg"}} />
+            <Text>73 km</Text>
+          </View>
         </View>
         
         <Break />
 
         <View style={styles.inputBox}>
           <Text style={styles.label}>About Me:</Text>
-          <Text style={styles.inputLonger} > rågjrå gjkåoegjprogjrågjrå gjkåo </Text>
+          <Text style={styles.inputLonger} > {userInfo.bio} </Text>
         </View>
     </ScrollView>
-  );
+  )
+
+  function GetProfile(){
+
+    if(loaded == true){
+      return;
+    }
+
+    const dbh = firebase.firestore();
+  
+    if(dbh == null){
+      console.log("No database connecttion");
+      return <View><Text>no database</Text></View>;
+    }
+  
+    var docRef = dbh.collection("UserInformation").doc(props.id.toString());
+  
+    docRef.get().then(function(doc) {
+        if (doc.exists) {
+            console.log("Document data:", doc.data());
+            setUserInfo({
+              username: doc.data().name,
+              bio: doc.data().bio
+            });
+            setLoadedState(true);
+        } else {
+            // doc.data() will be undefined in this case
+            console.log("No such document!");
+        }
+    }).catch(function(error) {
+        console.log("Error getting document:", error);
+    });
+  }
+
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -71,7 +180,7 @@ const styles = StyleSheet.create({
   },
   picture:{
     width:400,
-    height: 300
+    height: 400
   },
   pictureIndicator:{
     height: 50

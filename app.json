@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "wingman",
+    "name": "Wingman",
     "slug": "wingman",
     "platforms": [
       "ios",
@@ -9,7 +9,7 @@
     ],
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo.png",
     "scheme": "myapp",
     "splash": {
       "image": "./assets/images/splash.png",
@@ -24,6 +24,10 @@
     ],
     "ios": {
       "supportsTablet": true
+    },
+    "android": {
+      "package": "com.cibum.wingman",
+      "versionCode": 1 
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
